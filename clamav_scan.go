@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/lxn/walk"
@@ -12,42 +10,85 @@ import (
 )
 
 func main() {
-	var filePath *walk.LineEdit
-
+	// var filePath *walk.LineEdit
+	mw, err := walk.NewMainWindow()
+	if err != nil {
+		fmt.Println(err)
+		return
+	} // Create the UI controls
+	resultLabel, err := walk.NewLabel(mw)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	resultLabel.SetText("")
 	MainWindow{
 		Title:   "ClamAV Scanner",
-		MinSize: Size{Width: 300, Height: 200},
+		MinSize: Size{Width: 100, Height: 200},
 		Layout:  VBox{},
 		Children: []Widget{
 			Label{
 				Text: "Enter file path:",
 			},
-			LineEdit{
-				AssignTo: &filePath,
-			},
+			// LineEdit{
+			// 	AssignTo: &filePath,
+			// },
+			// PushButton{
+			// 	OnClicked: func() {
+			// 		filename := selectFile()
+			// 		if filename != "" {
+			// 			resultLabel.SetText("Scanning " + filename + "...")
+			// 			scanFile(filename, resultLabel)
+			// 		}
+			// 	},
+			// },
 			PushButton{
 				Text: "Scan",
 				OnClicked: func() {
-					path := filePath.Text()
-					cmd := exec.Command("clamscan", path)
-					output, err := cmd.CombinedOutput()
-					if err != nil {
-						fmt.Println(err)
-						return
+					// path := filePath.Text()
+					// cmd := exec.Command("clamscan", path)
+					// output, err := cmd.CombinedOutput()
+					// if err != nil {
+					// 	fmt.Println(err)
+					// 	return
+					// }
+					// walk.MsgBox(nil, "Scan Result", string(output), walk.MsgBoxOK|walk.MsgBoxIconInformation)
+					filename := selectFile(mw)
+					if filename != "" {
+						resultLabel.SetText("Scanning " + filename + "...")
+						scanFile(filename, resultLabel)
 					}
-					walk.MsgBox(nil, "Scan Result", string(output), walk.MsgBoxOK|walk.MsgBoxIconInformation)
 				},
 			},
 		},
 	}.Run()
 }
-func scanFile(filename string, resultLabel *walk.Label) {
-	scannerPath := filepath.Join(os.Getenv("ProgramFiles"), "ClamAV", "bin", "clamscan.exe")
+func selectFile(parent walk.Form) string {
+	dlg := new(walk.FileDialog)
+	dlg.Title = "Select file"
+	dlg.Filter = "All Files (*.*)|*.*"
+	dlg.ShowReadOnlyCB = true
+	// dlg.Multiselect = false
+	// dlg.Parent = parent
 
-	cmd := exec.Command(scannerPath, "-v", "-i", "-f", filename)
+	if ok, err := dlg.ShowOpen(parent); err != nil {
+		fmt.Println(err)
+	} else if !ok {
+		return ""
+	} else {
+		return dlg.FilePath
+	}
+
+	return ""
+}
+func scanFile(filename string, resultLabel *walk.Label) {
+	// scannerPath := filepath.Join(os.Getenv("Program Files (x86)"), "ClamAV", "bin", "clamscan.exe")
+
+	cmd := exec.Command("C:\\Program Files (x86)\\ClamAV\\clamscan.exe", "-v", "-i", "-f", filename)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(err)
+		fmt.Println("error gak tau")
 		return
 	}
 
