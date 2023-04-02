@@ -27,7 +27,6 @@ func main() {
 	resultLabel.SetText("")
 
 	MainWindow{
-
 		Title:   "ClamAV Scanner",
 		MinSize: Size{Width: 100, Height: 200},
 		Layout:  VBox{},
@@ -55,23 +54,8 @@ func main() {
 			PushButton{
 				Text: "Scan",
 				OnClicked: func() {
-					// path := filePath.Text()
-					// cmd := exec.Command("clamscan", path)
-					// output, err := cmd.CombinedOutput()
-					// if err != nil {
-					// 	fmt.Println(err)
-					// 	return
-					// }
-					// walk.MsgBox(nil, "Scan Result", string(output), walk.MsgBoxOK|walk.MsgBoxIconInformation)
 
 					filename := selectFile(mw)
-
-					// if err != nil {
-					// 	fmt.Println("Error selecting folder:", err)
-					// 	return
-					// } else {
-
-					// },
 
 					if filename != "" {
 
@@ -80,6 +64,7 @@ func main() {
 						progressBar.SetValue(0)
 						go func() {
 							scanFile(filename, resultLabel, progressBar)
+							progressBar.SetMarqueeMode(true)
 						}()
 					}
 				},
@@ -95,7 +80,6 @@ func selectFile(parent walk.Form) string {
 	dlg.ShowReadOnlyCB = true
 	// dlg.Multiselect = false
 	// dlg.Parent = parent
-
 	if ok, err := dlg.ShowBrowseFolder(parent); err != nil {
 		fmt.Println(err)
 	} else if !ok {
@@ -103,7 +87,6 @@ func selectFile(parent walk.Form) string {
 	} else {
 		return dlg.FilePath
 	}
-
 	return ""
 }
 func scanFile(filename string, resultLabel *walk.Label, progressBar *walk.ProgressBar) {
@@ -123,12 +106,19 @@ func scanFile(filename string, resultLabel *walk.Label, progressBar *walk.Progre
 		progressValue := 0.5 // Replace with your calculation logic
 		fmt.Println(out.String())
 		if strings.Contains(out.String(), "OK") {
-			resultLabel.SetText(filename + " is clean!")
+			// resultLabel.SetText(filename + " is clean!")
+			walk.MsgBox(nil, "HASIL", "is clean", walk.MsgBoxIconError)
 			progressBar.SetValue(int(progressValue))
+			progressBar.SetMarqueeMode(false)
 		} else {
 			resultLabel.SetText(filename + " is infected!")
+			progressBar.SetMarqueeMode(false)
 		}
 		resultLabel.Invalidate()
 		progressBar.SetValue(100)
 	}()
+
+}
+func showMessage(owner walk.Form, title, message string) {
+	walk.MsgBox(owner, title, message, walk.MsgBoxIconError)
 }
