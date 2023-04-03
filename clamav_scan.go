@@ -103,14 +103,15 @@ func scanFile(filename string, resultLabel *walk.Label, progressBar *walk.Progre
 			fmt.Println("error gak tau")
 			return
 		}
-		progressValue := 0.5 // Replace with your calculation logic
+		progressValue := 0.5
 		fmt.Println(out.String())
 		if strings.Contains(out.String(), "OK") {
 			// resultLabel.SetText(filename + " is clean!")
-			walk.MsgBox(nil, "HASIL", "is clean", walk.MsgBoxIconError)
+			walk.MsgBox(nil, "Result", "is clean", walk.MsgBoxIconInformation)
 			progressBar.SetValue(int(progressValue))
 			progressBar.SetMarqueeMode(false)
 		} else {
+			walk.MsgBox(nil, "Result", "is infected!", walk.MsgBoxIconError)
 			resultLabel.SetText(filename + " is infected!")
 			progressBar.SetMarqueeMode(false)
 		}
