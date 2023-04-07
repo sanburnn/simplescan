@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/lxn/walk"
@@ -58,6 +59,13 @@ func main() {
 				Text: "Scan",
 				OnClicked: func() {
 					checkClamAVVersion()
+					output, err := checkCurrentVersion("C:\\Program Files\\ClamAV\\clamscan -V")
+					if err != nil {
+						fmt.Println("Failed to execute command:", err)
+						return
+					}
+
+					fmt.Println("Output of 'date' command:", output)
 					filename := selectFile(mw)
 
 					if filename != "" {
@@ -124,8 +132,20 @@ func scanFile(filename string, resultLabel *walk.Label, progressBar *walk.Progre
 
 }
 
+func checkCurrentVersion(command string, args ...string) (string, error) {
+	// cmd := exec.Command("C:\\Program Files\\ClamAV\\clamscan", "-V")
+	cmd := exec.Command(command, args...)
+	outputBytes, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	output := string(outputBytes)
+	fmt.Println(output)
+	return output, nil
+}
 func checkClamAVVersion() {
-	// Fetch the latest version number from the ClamAV website
+	// Fetch the ClamAV download page HTML
 	resp, err := http.Get("https://www.clamav.net/downloads")
 	if err != nil {
 		fmt.Println("Failed to fetch ClamAV download page:", err)
@@ -138,27 +158,31 @@ func checkClamAVVersion() {
 		fmt.Println("Failed to read ClamAV download page response:", err)
 		return
 	}
-
-	// Search for the version number in the HTML response
-	versionStart := strings.Index(string(body), "Latest stable release:")
-	if versionStart < 0 {
-		fmt.Println("Failed to find ClamAV version number in download page 1")
+	fmt.Println(body)
+	// Search for the version number in the HTML using a regular expression
+	value := body[0]
+	parts := []string{
+		strconv.Itoa(int(value / 100)),
+		".",
+		strconv.Itoa(int((value / 10) % 10)),
+		".",
+		strconv.Itoa(int(value % 10)),
+	}
+	result := strings.Join(parts, "")
+	// re := regexp.MustCompile(`(\d)(\d)(\d)`)
+	// matches := re.FindStringSubmatch(string(body))
+	fmt.Println(result)
+	if len(result) < 2 {
+		fmt.Println("Failed to find ClamAV version number in download page")
 		return
 	}
-	versionStart += 22 // move past "Latest stable release: "
 
-	versionEnd := strings.Index(string(body[versionStart:]), "<")
-	if versionEnd < 0 {
-		fmt.Println("Failed to find end of ClamAV version number in download page 2")
-		return
-	}
-	versionEnd += versionStart
-
-	version := string(body[versionStart:versionEnd])
-	fmt.Println("Latest ClamAV version is", version)
+	latestVersion := result
+	fmt.Println(latestVersion)
+	fmt.Println("Latest ClamAV version is", latestVersion)
 
 	// Check if the installed version is out of date
-	if isOutOfDate(installedVersion(), version) {
+	if isOutOfDate(installedVersion(), latestVersion) {
 		fmt.Println("Your ClamAV version is out of date. Please update to the latest version.")
 	} else {
 		fmt.Println("Your ClamAV version is up to date.")
@@ -167,7 +191,7 @@ func checkClamAVVersion() {
 
 func installedVersion() string {
 	// TODO: implement a function that retrieves the currently installed version of ClamAV
-	return "1.0.1" // replace with actual version number
+	return "1.0.2" // replace with actual version number
 }
 
 func isOutOfDate(currentVersion string, latestVersion string) bool {
@@ -210,7 +234,7 @@ func isOutOfDate(currentVersion string, latestVersion string) bool {
 // 		return
 // 	}
 // 	defer resp.Body.Close()
-// 	fmt.Println(resp.Body)
+
 // 	body, err := ioutil.ReadAll(resp.Body)
 // 	if err != nil {
 // 		fmt.Println("Failed to read ClamAV download page response:", err)
