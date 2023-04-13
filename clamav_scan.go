@@ -1,5 +1,11 @@
 package main
 
+/*
+#cgo LDFLAGS: -lclamav
+#include <stdlib.h>
+#include <clamav.h>
+*/
+
 import (
 	"bytes"
 	"fmt"
@@ -17,6 +23,11 @@ import (
 func main() {
 	var progressBar *walk.ProgressBar
 	// var filePath *walk.LineEdit
+	// Initialize ClamAV
+	// C.cl_init(C.CL_INIT_DEFAULT)
+
+	// Load the virus signature database
+	// C.cl_load(C.CString("/var/lib/clamav"))
 	mw, err := walk.NewMainWindow()
 	if err != nil {
 		fmt.Println(err)
@@ -59,7 +70,7 @@ func main() {
 				Text: "Scan",
 				OnClicked: func() {
 					checkClamAVVersion()
-					output, err := checkCurrentVersion("C:\\Program Files\\ClamAV\\clamscan -V")
+					output, err := checkCurrentVersion("C:\\Program Files\\ClamAV\\clamscan", "-V")
 					if err != nil {
 						fmt.Println("Failed to execute command:", err)
 						return
