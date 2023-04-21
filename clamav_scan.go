@@ -77,18 +77,16 @@ func main() {
 					}
 
 					fmt.Println("Output of 'date' command:", output)
-					filename := selectFile(mw)
 
-					if filename != "" {
+					// resultLabel.SetText("Scanning " + filename + "...")
+					progressBar.SetValue(0)
+					go func() {
+						updateDatabase(resultLabel, progressBar)
+						scanProcess(resultLabel, progressBar)
+						// scanFile(filename, resultLabel, progressBar)
+						progressBar.SetMarqueeMode(true)
+					}()
 
-						resultLabel.SetText("Scanning " + filename + "...")
-						// resultLabel.SetText("Scanning " + filename + "...")
-						progressBar.SetValue(0)
-						go func() {
-							scanFile(filename, resultLabel, progressBar)
-							progressBar.SetMarqueeMode(true)
-						}()
-					}
 				},
 			},
 		},
@@ -111,6 +109,63 @@ func selectFile(parent walk.Form) string {
 	}
 	return ""
 }
+func updateDatabase(resultLabel *walk.Label, progressBar *walk.ProgressBar) {
+	cmd := exec.Command("C:\\Program Files\\ClamAV\\freshclam", "--show-progress")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	go func() {
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("error gak tau")
+			return
+		}
+		progressValue := 0.5
+		fmt.Println(out.String())
+		if strings.Contains(out.String(), "up-to-date") {
+			// resultLabel.SetText(filename + " is clean!")
+			walk.MsgBox(nil, "Result", "Database is Up to date", walk.MsgBoxIconInformation)
+			progressBar.SetValue(int(progressValue))
+			progressBar.SetMarqueeMode(false)
+		} else {
+			walk.MsgBox(nil, "Result", "Database is Updated", walk.MsgBoxIconError)
+			// resultLabel.SetText(filename + " is infected!")
+			progressBar.SetMarqueeMode(false)
+		}
+		resultLabel.Invalidate()
+		progressBar.SetValue(100)
+	}()
+}
+func scanProcess(resultLabel *walk.Label, progressBar *walk.ProgressBar) {
+	cmd := exec.Command("C:\\Program Files\\ClamAV\\clamscan", "--memory=yes")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	go func() {
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("error gak tau")
+			return
+		}
+		progressValue := 0.5
+		fmt.Println(out.String())
+		if strings.Contains(out.String(), "OK") {
+			// resultLabel.SetText(filename + " is clean!")
+			walk.MsgBox(nil, "Result", "is clean", walk.MsgBoxIconInformation)
+			progressBar.SetValue(int(progressValue))
+			progressBar.SetMarqueeMode(false)
+		} else {
+			walk.MsgBox(nil, "Result", "is infected!", walk.MsgBoxIconError)
+			// resultLabel.SetText(filename + " is infected!")
+			progressBar.SetMarqueeMode(false)
+		}
+		resultLabel.Invalidate()
+		progressBar.SetValue(100)
+	}()
+}
+
 func scanFile(filename string, resultLabel *walk.Label, progressBar *walk.ProgressBar) {
 	// scannerPath := filepath.Join(os.Getenv("Program Files (x86)"), "ClamAV", "bin", "clamscan.exe")
 
@@ -155,6 +210,7 @@ func checkCurrentVersion(command string, args ...string) (string, error) {
 	fmt.Println(output)
 	return output, nil
 }
+
 func checkClamAVVersion() {
 	// Fetch the ClamAV download page HTML
 	resp, err := http.Get("https://www.clamav.net/downloads")
@@ -189,8 +245,9 @@ func checkClamAVVersion() {
 	}
 
 	latestVersion := result
-	fmt.Println(latestVersion)
-	fmt.Println("Latest ClamAV version is", latestVersion)
+	//* PRINT THE RESULT OF VERSION
+	// fmt.Println(latestVersion)
+	// fmt.Println("Latest ClamAV version is", latestVersion)
 
 	// Check if the installed version is out of date
 	if isOutOfDate(installedVersion(), latestVersion) {
