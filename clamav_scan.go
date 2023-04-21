@@ -114,28 +114,28 @@ func updateDatabase(resultLabel *walk.Label, progressBar *walk.ProgressBar) {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 
-	go func() {
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("error gak tau")
-			return
-		}
-		progressValue := 0.5
-		fmt.Println(out.String())
-		if strings.Contains(out.String(), "up-to-date") {
-			// resultLabel.SetText(filename + " is clean!")
-			walk.MsgBox(nil, "Result", "Database is Up to date", walk.MsgBoxIconInformation)
-			progressBar.SetValue(int(progressValue))
-			progressBar.SetMarqueeMode(false)
-		} else {
-			walk.MsgBox(nil, "Result", "Database is Updated", walk.MsgBoxIconError)
-			// resultLabel.SetText(filename + " is infected!")
-			progressBar.SetMarqueeMode(false)
-		}
-		resultLabel.Invalidate()
-		progressBar.SetValue(100)
-	}()
+	// go func() {
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("error gak tau")
+		return
+	}
+	progressValue := 0.5
+	fmt.Println(out.String())
+	if strings.Contains(out.String(), "up-to-date") {
+		// resultLabel.SetText(filename + " is clean!")
+		walk.MsgBox(nil, "Result", "Database is Up to date", walk.MsgBoxIconInformation)
+		progressBar.SetValue(int(progressValue))
+		progressBar.SetMarqueeMode(false)
+	} else {
+		walk.MsgBox(nil, "Result", "Database is Updated", walk.MsgBoxIconError)
+		// resultLabel.SetText(filename + " is infected!")
+		progressBar.SetMarqueeMode(false)
+	}
+	resultLabel.Invalidate()
+	progressBar.SetValue(100)
+	// }()
 }
 func scanProcess(resultLabel *walk.Label, progressBar *walk.ProgressBar) {
 	cmd := exec.Command("C:\\Program Files\\ClamAV\\clamscan", "--memory=yes")
